@@ -37,7 +37,7 @@
           <a id="ats-buy-extra" class="btn btn-dark">Extra – €29.99</a>
         </div>
         
-        <div id="paypal-container" class="w-full max-w-sm mx-auto mt-6"></div>
+        <div id="paypal-container" class="w-full max-w-xs mx-auto mt-6"></div>
 
       </div>
 
@@ -116,7 +116,7 @@
 
         // --- PayPal Gombok Kezelése ---
         function renderPayPalButtons(packageKey) {
-            const prices = cfg.prices.EUR; // Vagy USD
+            const prices = cfg.prices.EUR;
             const price = prices[packageKey];
             const description = `AI Transform Studio - ${packageKey.charAt(0).toUpperCase() + packageKey.slice(1)} Csomag`;
             const container = document.getElementById('paypal-container');
@@ -129,12 +129,21 @@
             container.innerHTML = '';
             
             paypal.Buttons({
+                // === MÓDOSÍTVA: Stílus hozzáadva a gombok méretének csökkentéséhez ===
+                style: {
+                    layout: 'vertical',
+                    color:  'gold',
+                    shape:  'rect',
+                    label:  'paypal',
+                    height: 40 // Gomb magassága (25-55 között lehet)
+                },
+
                 createOrder: function(data, actions) {
                     return actions.order.create({
                         purchase_units: [{
                             description: description,
                             amount: {
-                                currency_code: 'EUR', // Vagy USD
+                                currency_code: 'EUR',
                                 value: price
                             }
                         }]
@@ -162,7 +171,6 @@
         document.getElementById('ats-buy-pro')?.addEventListener('click', (e) => { e.preventDefault(); renderPayPalButtons('pro'); });
         document.getElementById('ats-buy-extra')?.addEventListener('click', (e) => { e.preventDefault(); renderPayPalButtons('extra'); });
         
-        // A felső "Vásárlás" gomb a prémium csomagra mutat
         document.getElementById('nav-buy')?.addEventListener('click', (e) => { e.preventDefault(); renderPayPalButtons('pro'); });
 
 
