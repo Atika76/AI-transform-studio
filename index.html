@@ -52,26 +52,15 @@
       </div>
 
       <div class="ats-grid">
-        <!-- Kert medencével – Előtte/Utána (INLINE képekkel, nem kell assets) -->
         <div class="ats-card">
           <div class="ats-slider"
-               data-before="data:image/jpeg;base64,{{BEFORE_BASE64}}"
-               data-after="data:image/jpeg;base64,{{AFTER_BASE64}}">
-            <img src="data:image/jpeg;base64,{{BEFORE_BASE64}}" class="ats-img" alt="Kert medencével - Előtte">
+               data-before="assets/assetspool_before.jpg"
+               data-after="assets/assetspool_after.jpg">
+            <img src="assets/assetspool_before.jpg" class="ats-img" alt="Kert medencével - Előtte">
             <div class="ats-overlay"><div class="ats-handle"></div></div>
           </div>
           <div class="ats-caption">Kert medencével – Előtte/Utána</div>
         </div>
-
-        <!-- A többi demó csak akkor szükséges, ha nálad megvannak az assets képek -->
-        <div class="ats-card">
-          <div class="ats-slider" data-before="assets/demo_before_1.jpg" data-after="assets/demo_after_1.jpg">
-            <img src="assets/demo_before_1.jpg" class="ats-img" alt="Before 1">
-            <div class="ats-overlay"><div class="ats-handle"></div></div>
-          </div>
-          <div class="ats-caption">Modern konyha – Előtte/Utána</div>
-        </div>
-
         <div class="ats-card">
           <div class="ats-slider" data-before="assets/demo_before_2.jpg" data-after="assets/demo_after_2.jpg">
             <img src="assets/demo_before_2.jpg" class="ats-img" alt="Before 2">
@@ -122,7 +111,6 @@
 
   <script>
     (async function() {
-      // Alapárak akkor is működjenek, ha nincs config
       const DEFAULT_PRICES = {basic:3.99, pro:14.99, extra:29.99};
       let cfg = { brand: "AI Transform Studio", form_url: "", prices: {EUR: DEFAULT_PRICES} };
       try {
@@ -160,7 +148,6 @@
       document.getElementById('ats-buy-extra')?.addEventListener('click', (e) => { e.preventDefault(); renderPayPalButtons('extra'); });
       document.getElementById('nav-buy')?.addEventListener('click',       (e) => { e.preventDefault(); renderPayPalButtons('pro');   });
 
-      // Előtte–Utána csúszka
       const initSlider = (slider) => {
         const afterSrc = slider.getAttribute('data-after');
         const overlay = slider.querySelector('.ats-overlay'); if (!overlay) return;
@@ -183,7 +170,6 @@
       };
       document.querySelectorAll('.ats-slider').forEach(initSlider);
 
-      // Lábléc év
       document.getElementById('y').textContent = new Date().getFullYear();
     })();
   </script>
