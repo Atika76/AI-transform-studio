@@ -1,0 +1,20 @@
+{
+  "brand": "AI Transform Studio",
+  "gumroad_url": "https://gumroad.com/your-product-slug",
+  "basic_path": "",
+  "pro_path": "",
+  "extra_path": "",
+  "form_url": "https://forms.gle/your-google-form-id",
+  "prices": {
+    "EUR": {
+      "basic": 3.99,
+      "pro": 14.99,
+      "extra": 29.99
+    },
+    "USD": {
+      "basic": 3.99,
+      "pro": 14.99,
+      "extra": 29.99
+    }
+  }
+}
