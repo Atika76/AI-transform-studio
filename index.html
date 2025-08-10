@@ -14,7 +14,10 @@
   
   <script src="https://www.paypal.com/sdk/js?client-id=AQsaQCLj0og2wsfMoDKAqxJieD2cgXwWq5cssAJCJbO2KoYE8LGHCREyR4vMzMfKZK68qw6EY7IAxMYF&currency=EUR"></script>
   
-  <style>body{margin:0;background:#fafafa}</style>
+  <style>body{margin:0;background:#fafafa}
+  .pkg-note{opacity:.85;margin-left:4px;font-weight:500}
+  .ats-cta-notes{margin-top:6px;font-size:14px;color:#666;text-align:center}
+</style>
 </head>
 <body>
   <header class="ats-nav">
@@ -36,6 +39,8 @@
           <a id="ats-buy-pro" class="btn btn-outline">Prémium – €14.99</a>
           <a id="ats-buy-extra" class="btn btn-dark">Extra – €29.99</a>
         </div>
+        <div id="ats-cta-notes" class="ats-cta-notes"></div>
+
         
         <div id="paypal-container" class="w-full max-w-xs mx-auto mt-6"></div>
 
@@ -104,112 +109,106 @@
     <div class="wrap">© <span id="y"></span> AI Transform Studio</div>
   </footer>
 
-  <script>
-    (async function() {
-        let cfg = { brand: "AI Transform Studio", form_url: "", prices: { EUR: {}, USD: {} } };
-        try {
-            const r = await fetch('assets/ats-config.json', { cache: 'no-store' });
-            if (r.ok) { cfg = await r.json(); }
-        } catch (e) {
-            console.error("Config file could not be loaded.", e);
-        }
+  
+<script>
+  (async function() {
+    let cfg = {
+      brand: "AI Transform Studio",
+      form_url: "",
+      prices: { EUR: { basic: 3.99, pro: 14.99, extra: 29.99 } },
+      packages: {
+        basic:  { label: "Alap",    images: 1,  variations: 0 },
+        pro:    { label: "Prémium", images: 5,  variations: 0 },
+        extra:  { label: "Extra",   images: 10, variations: 2 }
+      }
+    };
+    try {
+      const r = await fetch('assets/ats-config.json', { cache: 'no-store' });
+      if (r.ok) {
+        const userCfg = await r.json();
+        cfg = Object.assign(cfg, userCfg, {
+          prices: Object.assign(cfg.prices||{}, userCfg.prices||{}),
+          packages: Object.assign(cfg.packages||{}, userCfg.packages||{})
+        });
+      }
+    } catch (e) { console.warn("Config nem tölthető be, alapértékekkel fut.", e); }
 
-        // --- PayPal Gombok Kezelése ---
-        function renderPayPalButtons(packageKey) {
-            const prices = cfg.prices.EUR;
-            const price = prices[packageKey];
-            const description = `AI Transform Studio - ${packageKey.charAt(0).toUpperCase() + packageKey.slice(1)} Csomag`;
-            const container = document.getElementById('paypal-container');
-            
-            if(!price) {
-                alert('Hiba: A csomag ára nincs beállítva a config fájlban.');
-                return;
-            }
+    const pkgText = (p) => {
+      const varTxt = p.variations ? ` + ${p.variations} variáció/kép` : "";
+      return `(${p.images} kép${varTxt})`;
+    };
+    const eurPrice = (key) => (cfg?.prices?.EUR?.[key] ?? null);
+    const setBtnLabel = (id, key) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const p = cfg.packages[key];
+      const price = eurPrice(key);
+      if (!p || price == null) return;
+      el.innerHTML = `<strong>${p.label}</strong> – €${Number(price).toFixed(2)} <span class="pkg-note">${pkgText(p)}</span>`;
+    };
+    setBtnLabel('ats-buy-basic','basic');
+    setBtnLabel('ats-buy-pro','pro');
+    setBtnLabel('ats-buy-extra','extra');
+    const notes = document.getElementById('ats-cta-notes');
+    if (notes) {
+      const b = cfg.packages.basic, pr = cfg.packages.pro, ex = cfg.packages.extra;
+      notes.textContent = `${b.label}: ${pkgText(b)} • ${pr.label}: ${pkgText(pr)} • ${ex.label}: ${pkgText(ex)}`;
+    }
 
-            container.innerHTML = '';
-            
-            paypal.Buttons({
-                // === MÓDOSÍTVA: Stílus hozzáadva a gombok méretének csökkentéséhez ===
-                style: {
-                    layout: 'vertical',
-                    color:  'gold',
-                    shape:  'rect',
-                    label:  'paypal',
-                    height: 40 // Gomb magassága (25-55 között lehet)
-                },
+    function renderPayPalButtons(packageKey) {
+      const p = cfg.packages[packageKey];
+      const price = eurPrice(packageKey);
+      const container = document.getElementById('paypal-container');
+      if (!p || price == null) { alert('Hiba: A csomag vagy ár hiányzik.'); return; }
+      container.innerHTML = '';
+      paypal.Buttons({
+        style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal', height: 40 },
+        createOrder: (data, actions) => {
+          const description = `AI Transform Studio – ${p.label} ${pkgText(p)}`;
+          return actions.order.create({
+            purchase_units: [{ description, amount: { currency_code: 'EUR', value: Number(price).toFixed(2) } }]
+          });
+        },
+        onApprove: (data, actions) =>
+          actions.order.capture().then(() => {
+            alert('Sikeres fizetés! Most átirányítunk a fotófeltöltő űrlapra.');
+            if (cfg.form_url && cfg.form_url.startsWith('http')) window.location.href = cfg.form_url;
+            else alert('Hiba: form_url nincs beállítva az assets/ats-config.json fájlban.');
+          }),
+        onError: (err) => { console.error('PayPal hiba:', err); alert('Hiba történt a fizetés során. Próbáld újra.'); }
+      }).render('#paypal-container');
+      container.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+    document.getElementById('ats-buy-basic')?.addEventListener('click', (e) => { e.preventDefault(); renderPayPalButtons('basic'); });
+    document.getElementById('ats-buy-pro')?.addEventListener('click',   (e) => { e.preventDefault(); renderPayPalButtons('pro'); });
+    document.getElementById('ats-buy-extra')?.addEventListener('click', (e) => { e.preventDefault(); renderPayPalButtons('extra'); });
+    document.getElementById('nav-buy')?.addEventListener('click',       (e) => { e.preventDefault(); renderPayPalButtons('pro'); });
 
-                createOrder: function(data, actions) {
-                    return actions.order.create({
-                        purchase_units: [{
-                            description: description,
-                            amount: {
-                                currency_code: 'EUR',
-                                value: price
-                            }
-                        }]
-                    });
-                },
-                onApprove: function(data, actions) {
-                    return actions.order.capture().then(function(details) {
-                        alert('Sikeres fizetés! Köszönjük. Most átirányítunk a fotófeltöltő oldalra.');
-                        if (cfg.form_url && cfg.form_url.startsWith('http')) {
-                            window.location.href = cfg.form_url;
-                        } else {
-                            alert('Hiba: A fotófeltöltő űrlap (form_url) nincs beállítva az assets/ats-config.json fájlban.');
-                        }
-                    });
-                },
-                onError: function(err) {
-                    console.error('PayPal fizetési hiba:', err);
-                    alert('Hiba történt a fizetés során. Kérjük, próbálja újra.');
-                }
-            }).render('#paypal-container');
-        }
+    const initSlider = (slider) => {
+      const overlay = slider.querySelector('.ats-overlay');
+      const afterSrc = slider.getAttribute('data-after');
+      if (!overlay) return;
+      const afterImg = new Image(); afterImg.src = afterSrc; afterImg.alt = 'After';
+      overlay.insertBefore(afterImg, overlay.firstChild);
+      const handle = slider.querySelector('.ats-handle'); if (!handle) return;
+      let active = false;
+      const setPos = (x) => {
+        const r = slider.getBoundingClientRect();
+        let t = (x - r.left) / r.width;
+        t = Math.max(0, Math.min(1, t));
+        overlay.style.width = (t * 100) + '%';
+        handle.style.left = (t * 100) + '%';
+      };
+      slider.addEventListener('pointerdown', e => { active = true; setPos(e.clientX); });
+      window.addEventListener('pointerup', () => active = false);
+      window.addEventListener('pointermove', e => { if (active) setPos(e.clientX); });
+      const r = slider.getBoundingClientRect(); setPos(r.left + r.width / 2);
+    };
+    document.querySelectorAll('.ats-slider').forEach(initSlider);
 
-        // A vásárlás gombokhoz eseményfigyelők csatolása
-        document.getElementById('ats-buy-basic')?.addEventListener('click', (e) => { e.preventDefault(); renderPayPalButtons('basic'); });
-        document.getElementById('ats-buy-pro')?.addEventListener('click', (e) => { e.preventDefault(); renderPayPalButtons('pro'); });
-        document.getElementById('ats-buy-extra')?.addEventListener('click', (e) => { e.preventDefault(); renderPayPalButtons('extra'); });
-        
-        document.getElementById('nav-buy')?.addEventListener('click', (e) => { e.preventDefault(); renderPayPalButtons('pro'); });
+    const y = document.getElementById('y'); if (y) y.textContent = new Date().getFullYear();
+  })();
+</script>
 
-
-        // --- Az Előtte-Utána Csúszka Inicializálása ---
-        const initSlider = (slider) => {
-            const afterSrc = slider.getAttribute('data-after');
-            const overlay = slider.querySelector('.ats-overlay');
-            if (!overlay) return;
-
-            const afterImg = new Image();
-            afterImg.src = afterSrc;
-            afterImg.alt = 'After';
-            overlay.insertBefore(afterImg, overlay.firstChild);
-
-            const handle = slider.querySelector('.ats-handle');
-            if (!handle) return;
-
-            let active = false;
-            const setPos = (x) => {
-                const r = slider.getBoundingClientRect();
-                let t = (x - r.left) / r.width;
-                t = Math.max(0, Math.min(1, t));
-                overlay.style.width = (t * 100) + '%';
-                handle.style.left = (t * 100) + '%';
-            };
-
-            slider.addEventListener('pointerdown', e => { active = true; setPos(e.clientX); });
-            window.addEventListener('pointerup', () => active = false);
-            window.addEventListener('pointermove', e => { if (active) setPos(e.clientX); });
-
-            const r = slider.getBoundingClientRect();
-            setPos(r.left + r.width / 2);
-        };
-        document.querySelectorAll('.ats-slider').forEach(initSlider);
-
-        // --- Évszám beállítása a láblécben ---
-        document.getElementById('y').textContent=new Date().getFullYear();
-
-    })();
-  </script>
 </body>
 </html>
