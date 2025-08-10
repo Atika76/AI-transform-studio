@@ -61,12 +61,13 @@
           </div>
           <div class="ats-caption">Kert medencével – Előtte/Utána</div>
         </div>
+
         <div class="ats-card">
-          <div class="ats-slider" data-before="assets/demo_before_2.jpg" data-after="assets/demo_after_2.jpg">
-            <img src="assets/demo_before_2.jpg" class="ats-img" alt="Before 2">
+          <div class="ats-slider" data-before="assets/kert_before.jpg" data-after="assets/kert_after.jpg">
+            <img src="assets/kert_before.jpg" class="ats-img" alt="Mediterrán kert előtte">
             <div class="ats-overlay"><div class="ats-handle"></div></div>
           </div>
-          <div class="ats-caption">Skandináv nappali – Előtte/Utána</div>
+          <div class="ats-caption">Mediterrán kert – Előtte/Utána</div>
         </div>
 
         <div class="ats-card">
@@ -111,7 +112,7 @@
 
   <script>
     (async function() {
-      const DEFAULT_PRICES = {basic:3.99, pro:14.99, extra:29.99};
+      const DEFAULT_PRICES = {basic:"3.99", pro:"14.99", extra:"29.99"};
       let cfg = { brand: "AI Transform Studio", form_url: "", prices: {EUR: DEFAULT_PRICES} };
       try {
         const r = await fetch('assets/ats-config.json', { cache: 'no-store' });
