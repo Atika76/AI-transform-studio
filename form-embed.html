@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fotófeltöltés – AI Transform Studio</title>
+  <link rel="icon" href="assets/logo-square.png">
+  <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:0;background:#f7f7f7;color:#111}
+  .wrap{max-width:1000px;margin:0 auto;padding:24px}.card{background:#fff;border:1px solid #ececec;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,.05);overflow:hidden}
+  .head{display:flex;align-items:center;gap:16px;padding:16px 20px;border-bottom:1px solid #eee}.head img{width:56px;height:56px}.head h1{font-size:20px;margin:0}
+  iframe{width:100%;height:80vh;border:0}.tip{padding:12px 20px;color:#444}</style>
+</head>
+<body>
+  <div class="wrap"><div class="card">
+    <div class="head"><img src="assets/logo-square.png" alt="logo"><h1>Fotófeltöltés űrlap (Google Form)</h1></div>
+    <div class="tip">Ha az űrlap nem töltődik be, <a id="directLink" href="#" target="_blank" rel="noopener">nyisd meg külön ablakban</a>.</div>
+    <iframe id="googleForm" src=""></iframe>
+  </div></div>
+  <script>(async function(){try{const r=await fetch('assets/ats-config.json',{cache:'no-store'});const cfg=await r.json();const url=cfg.form_url||'#';document.getElementById('googleForm').src=url;document.getElementById('directLink').href=url;}catch(e){}})();</script>
+</body>
+</html>
