@@ -1,20 +1,16 @@
 {
   "brand": "AI Transform Studio",
-  "gumroad_url": "",
-  "basic_path": "",
-  "pro_path": "",
-  "extra_path": "",
-  "form_url": "https://docs.google.com/forms/d/1SBIZwC1BIZddrbi7nVkBLXic0wc6j1mO6s6D7CZEEE4/edit",
+  "form_url": "https://docs.google.com/forms/d/e/1FAIpQLSeWqy0-PGnXgHvb1dng228E93vSzD_5u-3CHR_vb3DSjhqZKQ/viewform?usp=sf_link",
   "prices": {
     "EUR": {
-      "basic": 3.99,
-      "pro": 14.99,
-      "extra": 29.99
+      "basic": "3.99",
+      "pro": "14.99",
+      "extra": "29.99"
     },
     "USD": {
-      "basic": 3.99,
-      "pro": 14.99,
-      "extra": 29.99
+      "basic": "3.99",
+      "pro": "14.99",
+      "extra": "29.99"
     }
   }
 }
