@@ -2,15 +2,12 @@
   "brand": "AI Transform Studio",
   "form_url": "https://docs.google.com/forms/d/e/1FAIpQLSeWqy0-PGnXgHvb1dng228E93vSzD_5u-3CHR_vb3DSjhqZKQ/viewform?usp=sf_link",
   "prices": {
-    "EUR": {
-      "basic": "3.99",
-      "pro": "14.99",
-      "extra": "29.99"
-    },
-    "USD": {
-      "basic": "3.99",
-      "pro": "14.99",
-      "extra": "29.99"
-    }
+    "EUR": { "basic": 3.99, "pro": 14.99, "extra": 29.99 },
+    "USD": { "basic": 3.99, "pro": 14.99, "extra": 29.99 }
+  },
+  "packages": {
+    "basic":  { "label": "Alap",    "images": 1,  "variations": 0 },
+    "pro":    { "label": "Prémium", "images": 5,  "variations": 0 },
+    "extra":  { "label": "Extra",   "images": 10, "variations": 2 }
   }
 }
