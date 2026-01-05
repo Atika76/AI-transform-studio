@@ -3,60 +3,111 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI Transform Studio – Előtte–Utána (PayPal integráció)</title>
+  <title>AI Transform Studio – Előtte–Utána (Admin & Listázás)</title>
   <meta name="description" content="AI Before–After Transformations – Lakás • Kert • Autó • Stílus">
-  <meta property="og:title" content="AI Transform Studio">
-  <meta property="og:description" content="Előtte–Utána AI átalakítások 24 órán belül">
-  <meta property="og:type" content="website">
   <link rel="icon" href="assets/logo-square.png">
   <link rel="stylesheet" href="assets/ats.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://www.paypal.com/sdk/js?client-id=AQsaQCLj0og2wsfMoDKAqxJieD2cgXwWq5cssAJCJbO2KoYE8LGHCREyR4vMzMfKZK68qw6EY7IAxMYF&currency=EUR"></script>
 
   <style>
-    body{margin:0;background:#fafafa}
-
-    /* FIX: kártyák 16:9 arányban, képek szépen vágva */
+    body{margin:0;background:#fafafa; font-family: 'Inter', sans-serif;}
     .ats-card .ats-slider{aspect-ratio:16/9;height:auto;overflow:hidden;position:relative}
-    .ats-card .ats-slider img,
-    .ats-card .ats-slider .ats-overlay img{width:100%;height:100%;object-fit:cover;display:block}
-
-    /* Képszám jelzés a gombokon + rövid sor alatta */
+    .ats-card .ats-slider img, .ats-card .ats-slider .ats-overlay img{width:100%;height:100%;object-fit:cover;display:block}
     .pkg-note{opacity:.85;margin-left:4px;font-weight:500}
-    .ats-cta-notes{margin-top:6px;font-size:14px;color:#666;text-align:center}
+
+    /* Admin & Auth stílusok */
+    #auth-section { display: none; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 380px; margin: 30px auto; border: 1px solid #eee; }
+    .auth-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+    .auth-btn { width: 100%; padding: 12px; background: #1a1a1a; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; }
+    
+    .nav-user { font-size: 13px; color: #444; display: flex; align-items: center; gap: 10px; }
+    .logout-link { color: #e53e3e; cursor: pointer; text-decoration: underline; font-weight: 600; }
+    .admin-badge { background: #38a169; color: white; padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+
+    /* Admin Panel Táblázat */
+    #admin-panel { display: none; background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+    .admin-table th { background: #f7fafc; padding: 12px; text-align: left; border-bottom: 2px solid #edf2f7; }
+    .admin-table td { padding: 12px; border-bottom: 1px solid #edf2f7; }
+    .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
   </style>
 </head>
 <body>
   <header class="ats-nav">
-    <div class="wrap">
-      <img src="assets/logo-square.png" alt="logo" class="nav-logo">
-      <div class="brand">AI Transform Studio</div>
-      <a class="nav-cta" id="nav-buy" href="#">Vásárlás</a>
+    <div class="wrap" style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center;">
+        <img src="assets/logo-square.png" alt="logo" class="nav-logo">
+        <div class="brand">AI Transform Studio</div>
+      </div>
+      <div id="nav-auth-area">
+        <a class="nav-cta" href="#auth" onclick="toggleAuth()">Belépés</a>
+      </div>
     </div>
   </header>
 
   <main>
+    <section id="auth-section">
+      <h3 style="margin-top:0; text-align:center; color: #1a1a1a;">Bejelentkezés</h3>
+      <form id="login-form">
+        <input type="email" id="login-email" class="auth-input" placeholder="Email címed" required>
+        <input type="password" id="login-pass" class="auth-input" placeholder="Jelszavad" required>
+        <button type="submit" class="auth-btn">Belépés</button>
+      </form>
+    </section>
+
     <section id="ai-transform-studio" class="ats-container">
       <div class="ats-hero">
         <img src="assets/logo-wide.png" alt="AI Transform Studio" class="ats-logo" />
         <h1>AI Előtte–Utána Átalakítások</h1>
         <p class="ats-sub">Lakás • Kert • Autó • Stílus – Látványtervek 24 órán belül</p>
 
-        <div class="ats-cta">
-          <a id="ats-buy-basic" class="btn"><strong>Alap</strong> – €3.99 <span class="pkg-note">(1 kép)</span></a>
-          <a id="ats-buy-pro" class="btn btn-outline"><strong>Prémium</strong> – €14.99 <span class="pkg-note">(5 kép)</span></a>
-          <a id="ats-buy-extra" class="btn btn-dark"><strong>Extra</strong> – €29.99 <span class="pkg-note">(10 kép + 2 variáció/kép)</span></a>
+        <div id="pricing-wrapper">
+            <div class="ats-cta">
+              <a id="ats-buy-basic" class="btn"><strong>Alap</strong> – €3.99 <span class="pkg-note">(1 kép)</span></a>
+              <a id="ats-buy-pro" class="btn btn-outline"><strong>Prémium</strong> – €14.99 <span class="pkg-note">(5 kép)</span></a>
+              <a id="ats-buy-extra" class="btn btn-dark"><strong>Extra</strong> – €29.99 <span class="pkg-note">(10 kép + 2 variáció/kép)</span></a>
+            </div>
+            <div class="ats-cta-notes">Alap: (1 kép) • Prémium: (5 kép) • Extra: (10 kép + 2 variáció/kép)</div>
         </div>
-        <div id="ats-cta-notes" class="ats-cta-notes">Alap: (1 kép) • Prémium: (5 kép) • Extra: (10 kép + 2 variáció/kép)</div>
+
+        <div id="admin-free-area" style="display:none; text-align:center; margin-top:20px;">
+            <div style="background: #f0fff4; border: 1px solid #c6f6d5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <p style="color:#2f855a; font-weight:bold; margin: 0;">Üdv Admin! Számodra a rendszer díjmentes.</p>
+            </div>
+            <a id="admin-free-btn" class="btn" style="background:#38a169; color:white; border:none;">INGYENES GENERÁLÁS INDÍTÁSA</a>
+        </div>
 
         <div id="paypal-container" class="w-full max-w-xs mx-auto mt-6"></div>
       </div>
 
+      <section id="admin-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+              <h2 style="margin:0;">Beérkezett megrendelések</h2>
+              <button onclick="loadAdminOrders()" style="font-size:12px; cursor:pointer; background:#eee; border:none; padding:5px 10px; border-radius:4px;">Frissítés 🔄</button>
+          </div>
+          <div class="overflow-x-auto">
+              <table class="admin-table">
+                  <thead>
+                      <tr>
+                          <th>Dátum</th>
+                          <th>Ügyfél</th>
+                          <th>Csomag</th>
+                          <th>Állapot</th>
+                      </tr>
+                  </thead>
+                  <tbody id="admin-order-list">
+                      <tr><td colspan="4" style="text-align:center; color:gray;">Nincs megjeleníthető adat...</td></tr>
+                  </tbody>
+              </table>
+          </div>
+      </section>
+
       <div class="ats-grid">
         <div class="ats-card">
-          <div class="ats-slider"
-               data-before="assets/assetspool_before.jpg"
-               data-after="assets/assetspool_after.jpg">
-            <img src="assets/assetspool_before.jpg" class="ats-img" alt="Kert medencével - Előtte">
+          <div class="ats-slider" data-before="assets/assetspool_before.jpg" data-after="assets/assetspool_after.jpg">
+            <img src="assets/assetspool_before.jpg" class="ats-img" alt="Kert medencével">
             <div class="ats-overlay"><div class="ats-handle"></div></div>
           </div>
           <div class="ats-caption">Kert medencével – Előtte/Utána</div>
@@ -64,7 +115,7 @@
 
         <div class="ats-card">
           <div class="ats-slider" data-before="assets/kert_before.jpg" data-after="assets/kert_after.jpg">
-            <img src="assets/kert_before.jpg" class="ats-img" alt="Mediterrán kert előtte">
+            <img src="assets/kert_before.jpg" class="ats-img" alt="Mediterrán kert">
             <div class="ats-overlay"><div class="ats-handle"></div></div>
           </div>
           <div class="ats-caption">Mediterrán kert – Előtte/Utána</div>
@@ -72,18 +123,19 @@
 
         <div class="ats-card">
           <div class="ats-slider" data-before="assets/haz_before.jpg" data-after="assets/haz_after.jpg">
-            <img src="assets/haz_before.jpg" class="ats-img" alt="Házfelújítás előtte">
+            <img src="assets/haz_before.jpg" class="ats-img" alt="Házfelújítás">
             <div class="ats-overlay"><div class="ats-handle"></div></div>
           </div>
           <div class="ats-caption">Családi ház felújítás – Előtte/Utána</div>
         </div>
       </div>
+
       <div class="ats-info">
         <h2>Hogyan működik?</h2>
         <ol>
           <li>Válaszd ki a csomagot, és fizess a felugró PayPal ablakban.</li>
-          <li>Sikeres fizetés után automatikusan átirányítunk a fotófeltöltő űrlapra (Google Form).</li>
-          <li>24 órán belül elkészítjük az Előtte–Utána képeket és e-mailben küldjük.</li>
+          <li>Sikeres fizetés után automatikusan átirányítunk a fotófeltöltő űrlapra.</li>
+          <li>24 órán belül elkészítjük az Előtte–Utána képeket.</li>
         </ol>
       </div>
     </section>
@@ -94,66 +146,137 @@
   </footer>
 
   <script>
+    const SUPABASE_URL = "https://bxtpnotswnwrbycvfypz.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dHBub3Rzd253cmJ5Y3ZmeXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MTQ0NDcsImV4cCI6MjA2ODQ5MDQ0N30.CXEfo_8qmIYhkEZFdTsbl9ZB-PRTP6UK8EbIxxpSGZc";
+    const supaClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const ADMIN_EMAIL = "atika.76@windowslive.com";
+
     (async function() {
       const DEFAULT_PRICES = {basic:"3.99", pro:"14.99", extra:"29.99"};
       let cfg = { brand: "AI Transform Studio", form_url: "", prices: {EUR: DEFAULT_PRICES} };
+      
       try {
         const r = await fetch('assets/ats-config.json', { cache: 'no-store' });
         if (r.ok) cfg = Object.assign(cfg, await r.json());
       } catch(e) {}
 
+      // AUTH UI KEZELÉS
+      const authSection = document.getElementById('auth-section');
+      const navAuthArea = document.getElementById('nav-auth-area');
+      const pricingWrapper = document.getElementById('pricing-wrapper');
+      const adminFreeArea = document.getElementById('admin-free-area');
+      const adminPanel = document.getElementById('admin-panel');
+
+      window.toggleAuth = () => {
+          authSection.style.display = (authSection.style.display === 'block') ? 'none' : 'block';
+      };
+
+      async function updateAuthStatus() {
+          const { data: { session } } = await supaClient.auth.getSession();
+          if (session) {
+              const email = session.user.email;
+              const isAdmin = (email === ADMIN_EMAIL);
+              
+              navAuthArea.innerHTML = `
+                <div class="nav-user">
+                    ${isAdmin ? '<span class="admin-badge">Adminisztrátor</span>' : ''}
+                    <strong>${email}</strong>
+                    <span class="logout-link" onclick="logout()">Kilépés</span>
+                </div>`;
+              authSection.style.display = 'none';
+
+              if (isAdmin) {
+                  pricingWrapper.style.display = 'none';
+                  adminFreeArea.style.display = 'block';
+                  adminPanel.style.display = 'block';
+                  loadAdminOrders();
+                  document.getElementById('admin-free-btn').onclick = () => {
+                      if (cfg.form_url) window.location.href = cfg.form_url;
+                      else alert('form_url nincs beállítva az assets/ats-config.json-ban!');
+                  };
+              }
+          }
+      }
+
+      window.logout = async () => { await supaClient.auth.signOut(); window.location.reload(); };
+
+      document.getElementById('login-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const email = document.getElementById('login-email').value;
+          const pass = document.getElementById('login-pass').value;
+          const { error } = await supaClient.auth.signInWithPassword({ email, password: pass });
+          if (error) alert("Belépési hiba: " + error.message);
+          else window.location.reload();
+      });
+
+      window.loadAdminOrders = async () => {
+          const list = document.getElementById('admin-order-list');
+          list.innerHTML = '<tr><td colspan="4" style="text-align:center;">Betöltés...</td></tr>';
+          
+          // Itt a Supabase-ből kérjük le a rendeléseket (amennyiben van 'ats_rendelesek' táblád)
+          const { data, error } = await supaClient.from('ats_rendelesek').select('*').order('created_at', {ascending: false});
+          
+          if (error || !data || data.length === 0) {
+              list.innerHTML = '<tr><td colspan="4" style="text-align:center; color:gray;">Még nincsenek mentett rendelések az adatbázisban.</td></tr>';
+              return;
+          }
+
+          list.innerHTML = data.map(o => `
+              <tr>
+                  <td>${new Date(o.created_at).toLocaleDateString()}</td>
+                  <td>${o.email}</td>
+                  <td>${o.csomag_neve}</td>
+                  <td><span class="status-badge" style="background:#edf2f7;">Feldolgozás alatt</span></td>
+              </tr>
+          `).join('');
+      };
+
+      updateAuthStatus();
+
+      // PAYPAL LOGIKA
       function renderPayPalButtons(packageKey) {
         const prices = (cfg && cfg.prices && cfg.prices.EUR) ? cfg.prices.EUR : DEFAULT_PRICES;
-        const PACK_INFO = {
-          basic:  {label:'Alap',    note:'(1 kép)'},
-          pro:    {label:'Prémium', note:'(5 kép)'},
-          extra:  {label:'Extra',   note:'(10 kép + 2 variáció/kép)'}
-        };
         const price = prices[packageKey];
-        const description = `AI Transform Studio – ${PACK_INFO[packageKey].label} ${PACK_INFO[packageKey].note}`;
         const container = document.getElementById('paypal-container');
-        if(!price){ alert('Hiba: A csomag ára nincs beállítva.'); return; }
+        if(!price){ alert('Csomag hiba.'); return; }
         container.innerHTML = '';
         paypal.Buttons({
           style: { layout:'vertical', color:'gold', shape:'rect', label:'paypal', height:40 },
           createOrder: (data, actions) => actions.order.create({
-            purchase_units: [{ description, amount: { currency_code:'EUR', value: Number(price).toFixed(2) } }]
+            purchase_units: [{ description: `AI Transform - ${packageKey}`, amount: { currency_code:'EUR', value: Number(price).toFixed(2) } }]
           }),
-          onApprove: (data, actions) => actions.order.capture().then(() => {
-            alert('Sikeres fizetés! Átirányítunk a fotófeltöltő űrlapra.');
-            if (cfg.form_url && cfg.form_url.startsWith('http')) window.location.href = cfg.form_url;
-            else alert('Hiba: a form_url nincs beállítva az assets/ats-config.json fájlban.');
-          }),
-          onError: (err) => { console.error('PayPal hiba:', err); alert('Hiba történt a fizetés során. Próbáld újra.'); }
+          onApprove: (data, actions) => actions.order.capture().then(async (details) => {
+             // Rendelés mentése Supabase-be (opcionális)
+             await supaClient.from('ats_rendelesek').insert({ email: details.payer.email_address, csomag_neve: packageKey });
+             window.location.href = cfg.form_url;
+          })
         }).render('#paypal-container');
       }
-      document.getElementById('ats-buy-basic')?.addEventListener('click', (e) => { e.preventDefault(); renderPayPalButtons('basic'); });
-      document.getElementById('ats-buy-pro')?.addEventListener('click',   (e) => { e.preventDefault(); renderPayPalButtons('pro');   });
-      document.getElementById('ats-buy-extra')?.addEventListener('click', (e) => { e.preventDefault(); renderPayPalButtons('extra'); });
-      document.getElementById('nav-buy')?.addEventListener('click',       (e) => { e.preventDefault(); renderPayPalButtons('pro');   });
 
+      document.getElementById('ats-buy-basic')?.addEventListener('click', () => renderPayPalButtons('basic'));
+      document.getElementById('ats-buy-pro')?.addEventListener('click', () => renderPayPalButtons('pro'));
+      document.getElementById('ats-buy-extra')?.addEventListener('click', () => renderPayPalButtons('extra'));
+
+      // SLIDER INICIALIZÁLÁS
       const initSlider = (slider) => {
         const afterSrc = slider.getAttribute('data-after');
         const overlay = slider.querySelector('.ats-overlay'); if (!overlay) return;
-        const afterImg = new Image(); afterImg.src = afterSrc; afterImg.alt = 'After';
+        const afterImg = new Image(); afterImg.src = afterSrc;
         overlay.insertBefore(afterImg, overlay.firstChild);
         const handle = slider.querySelector('.ats-handle'); if (!handle) return;
         let active = false;
         const setPos = (x) => {
           const r = slider.getBoundingClientRect();
-          let t = (x - r.left) / r.width;
-          t = Math.max(0, Math.min(1, t));
+          let t = Math.max(0, Math.min(1, (x - r.left) / r.width));
           overlay.style.width = (t * 100) + '%';
           handle.style.left = (t * 100) + '%';
         };
         slider.addEventListener('pointerdown', e => { active = true; setPos(e.clientX); });
         window.addEventListener('pointerup', () => active = false);
         window.addEventListener('pointermove', e => { if (active) setPos(e.clientX); });
-        const r = slider.getBoundingClientRect();
-        setPos(r.left + r.width / 2);
+        setPos(slider.getBoundingClientRect().left + slider.getBoundingClientRect().width / 2);
       };
       document.querySelectorAll('.ats-slider').forEach(initSlider);
-
       document.getElementById('y').textContent = new Date().getFullYear();
     })();
   </script>
